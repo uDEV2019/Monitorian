@@ -134,7 +134,7 @@ namespace Monitorian.Core.ViewModels
 				if (_monitor.Brightness == value)
 					return;
 
-				SetBrightness(value);
+				SetBrightness(value, false);
 
 				if (IsSelected)
 					_controller.SaveMonitorUserChanged(this);
@@ -155,6 +155,7 @@ namespace Monitorian.Core.ViewModels
 			switch (result.Status)
 			{
 				case AccessStatus.Succeeded:
+					BrightnessUpdatedTime = DateTimeOffset.Now;
 					OnPropertyChanged(nameof(BrightnessSystemChanged)); // This must be prior to Brightness.
 					OnPropertyChanged(nameof(Brightness));
 					OnPropertyChanged(nameof(BrightnessSystemAdjusted));
@@ -173,6 +174,14 @@ namespace Monitorian.Core.ViewModels
 					OnFailed();
 					return false;
 			}
+		}
+
+		public bool? UpdateBrightnessIfElapsed(TimeSpan duration)
+		{
+			if (DateTimeOffset.Now - BrightnessUpdatedTime < duration)
+				return null;
+
+			return UpdateBrightness();
 		}
 
 		public void IncrementBrightness()
@@ -215,18 +224,15 @@ namespace Monitorian.Core.ViewModels
 			SetBrightness(brightness, isCycle);
 		}
 
-		private void SetBrightness(int brightness, bool isCycle)
+		public void SetBrightness(int brightness) => SetBrightness(brightness, false);
+
+		private bool SetBrightness(int brightness, bool isCycle)
 		{
 			if (brightness < RangeLowest)
 				brightness = isCycle ? RangeHighest : RangeLowest;
 			else if (RangeHighest < brightness)
 				brightness = isCycle ? RangeLowest : RangeHighest;
 
-			SetBrightness(brightness);
-		}
-
-		private bool SetBrightness(int brightness)
-		{
 			AccessResult result;
 			lock (_lock)
 			{
@@ -236,6 +242,7 @@ namespace Monitorian.Core.ViewModels
 			switch (result.Status)
 			{
 				case AccessStatus.Succeeded:
+					BrightnessUpdatedTime = DateTimeOffset.Now;
 					OnPropertyChanged(nameof(Brightness));
 					OnSucceeded();
 					return true;
@@ -255,6 +262,8 @@ namespace Monitorian.Core.ViewModels
 					return false;
 			}
 		}
+
+		public DateTimeOffset BrightnessUpdatedTime { get; private set; }
 
 		#endregion
 
@@ -299,6 +308,7 @@ namespace Monitorian.Core.ViewModels
 			switch (result.Status)
 			{
 				case AccessStatus.Succeeded:
+					ContrastUpdatedTime = DateTimeOffset.Now;
 					OnPropertyChanged(nameof(Contrast));
 					OnSucceeded();
 					return true;
@@ -317,8 +327,36 @@ namespace Monitorian.Core.ViewModels
 			}
 		}
 
+		public bool? UpdateContrastIfElapsed(TimeSpan duration)
+		{
+			if (DateTimeOffset.Now - ContrastUpdatedTime < duration)
+				return null;
+
+			return UpdateContrast();
+		}
+
+		public void IncrementContrast(int tickSize)
+		{
+			var size = (double)tickSize;
+			var count = Math.Floor(Contrast / size);
+			int contrast = (int)Math.Ceiling((count + 1) * size);
+
+			SetContrast(contrast);
+		}
+
+		public void DecrementContrast(int tickSize)
+		{
+			var size = (double)tickSize;
+			var count = Math.Ceiling(Contrast / size);
+			int contrast = (int)Math.Floor((count - 1) * size);
+
+			SetContrast(contrast);
+		}
+
 		private bool SetContrast(int contrast)
 		{
+			contrast = Math.Min(100, Math.Max(0, contrast));
+
 			AccessResult result;
 			lock (_lock)
 			{
@@ -328,6 +366,7 @@ namespace Monitorian.Core.ViewModels
 			switch (result.Status)
 			{
 				case AccessStatus.Succeeded:
+					ContrastUpdatedTime = DateTimeOffset.Now;
 					OnPropertyChanged(nameof(Contrast));
 					OnSucceeded();
 					return true;
@@ -347,6 +386,8 @@ namespace Monitorian.Core.ViewModels
 					return false;
 			}
 		}
+
+		public DateTimeOffset ContrastUpdatedTime { get; private set; }
 
 		#endregion
 

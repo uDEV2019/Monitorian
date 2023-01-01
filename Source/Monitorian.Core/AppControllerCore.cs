@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -69,7 +70,11 @@ namespace Monitorian.Core
 
 			OnSettingsInitiated();
 
-			NotifyIconContainer.ShowIcon("pack://application:,,,/Monitorian.Core;component/Resources/Icons/TrayIcon.ico", ProductInfo.Title);
+			NotifyIconContainer.ShowIcon(WindowPainter.GetIconPath(), ProductInfo.Title);
+			WindowPainter.ThemeChanged += (_, _) =>
+			{
+				NotifyIconContainer.ShowIcon(WindowPainter.GetIconPath());
+			};
 
 			_current.MainWindow = new MainWindow(this);
 
@@ -83,15 +88,18 @@ namespace Monitorian.Core
 			NotifyIconContainer.MouseLeftButtonClick += OnMainWindowShowRequestedBySelf;
 			NotifyIconContainer.MouseRightButtonClick += OnMenuWindowShowRequested;
 
-			_displayWatcher.Subscribe(() => OnMonitorsChangeInferred(nameof(DisplayWatcher)));
+			_displayWatcher.Subscribe((e) => OnMonitorsChangeInferred(nameof(DisplayWatcher), e));
 			_sessionWatcher.Subscribe((e) => OnMonitorsChangeInferred(nameof(SessionWatcher), e));
-			_powerWatcher.Subscribe((e) => OnMonitorsChangeInferred(nameof(PowerWatcher), e), PowerManagement.GetOnPowerSettingChanged());
+			_powerWatcher.Subscribe((e) => OnMonitorsChangeInferred(nameof(PowerWatcher), e));
+
 			_brightnessWatcher.Subscribe((instanceName, brightness) =>
 			{
 				if (!_sessionWatcher.IsLocked)
 					Update(instanceName, brightness);
 			},
 			async (message) => await Recorder.RecordAsync(message));
+
+			await CleanAsync();
 		}
 
 		public virtual void End()
@@ -149,7 +157,7 @@ namespace Monitorian.Core
 		{
 			var window = new MenuWindow(this, pivot);
 			window.ViewModel.CloseAppRequested += (_, _) => _current.Shutdown();
-			window.MenuSectionTop.Add(new ProbeSection(this));
+			window.MenuSectionTop.Add(new DevSection(this));
 			window.Show();
 		}
 
@@ -204,11 +212,16 @@ namespace Monitorian.Core
 
 		#region Monitors
 
-		protected virtual async void OnMonitorsChangeInferred(object sender = null, ICountEventArgs e = null)
+		protected virtual async void OnMonitorsChangeInferred(object sender, ICountEventArgs e = null)
 		{
 			await Recorder.RecordAsync($"{nameof(OnMonitorsChangeInferred)} ({sender}{e?.Description})");
 
-			if (e?.Count == 0)
+			await ProceedScanAsync(e);
+		}
+
+		protected virtual async Task ProceedScanAsync(ICountEventArgs e)
+		{
+			if (e is { Count: 0 })
 				return;
 
 			await ScanAsync(TimeSpan.FromSeconds(3));
@@ -421,10 +434,10 @@ namespace Monitorian.Core
 		protected internal virtual bool TryLoadCustomization(string deviceInstanceId, ref string name, ref bool isUnison, ref byte lowest, ref byte highest)
 		{
 			if (Settings.MonitorCustomizations.TryGetValue(deviceInstanceId, out MonitorCustomizationItem m)
-				&& (m.Lowest < m.Highest) && (m.Highest <= 100))
+				&& m.IsValid)
 			{
 				name = m.Name;
-				isUnison = Settings.EnablesUnison && m.IsUnison;
+				isUnison = m.IsUnison && Settings.EnablesUnison;
 				lowest = m.Lowest;
 				highest = m.Highest;
 				return true;
@@ -434,11 +447,10 @@ namespace Monitorian.Core
 
 		protected internal virtual void SaveCustomization(string deviceInstanceId, string name, bool isUnison, byte lowest, byte highest)
 		{
-			if (((name is not null) || isUnison || (0 != lowest) || (highest != 100))
-				&& (lowest < highest) && (highest <= 100))
+			MonitorCustomizationItem m = new(name, isUnison, lowest, highest);
+			if (m.IsValid && !m.IsDefault)
 			{
-				Settings.MonitorCustomizations.Add(deviceInstanceId, new MonitorCustomizationItem(name, isUnison, lowest, highest));
-
+				Settings.MonitorCustomizations.Add(deviceInstanceId, m);
 			}
 			else
 			{
@@ -470,6 +482,15 @@ namespace Monitorian.Core
 		public Task<string> LoadArgumentsAsync() => _keeper.LoadArgumentsAsync();
 
 		public Task SaveArgumentsAsync(string content) => _keeper.SaveArgumentsAsync(content);
+
+		#endregion
+
+		#region Clean
+
+		protected virtual Task CleanAsync()
+		{
+			return Task.Run(() => File.Delete(Path.Combine(Path.GetTempPath(), "License.html")));
+		}
 
 		#endregion
 	}
