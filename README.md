@@ -31,7 +31,7 @@ Additional languages:
  - Polish (pl-PL) by @Daxxxis and @FakeMichau
  - Portuguese (pt-BR) by @guilhermgonzaga
  - Romanian (ro) by @calini
- - Russian (ru-RU) by @SigmaTel71
+ - Russian (ru-RU) by @SigmaTel71 and @San4es
  - Turkish (tr-TR) by @webbudesign
  - Ukrainian (uk-UA) by @kaplun07
  - Simplified Chinese (zh-Hans) by @ComMouse, @zhujunsan, @XMuli, @FISHandCHEAP and @FrzMtrsprt
@@ -56,7 +56,7 @@ Additional languages:
    ```
 
  * Other:<br>
-:floppy_disk: [Installer](https://github.com/emoacht/Monitorian/releases/download/4.0.0-Installer/MonitorianInstaller400.zip)
+:floppy_disk: [Installer](https://github.com/emoacht/Monitorian/releases/download/4.1.0-Installer/MonitorianInstaller410.zip)
 
 ## Install/Uninstall
 
@@ -101,6 +101,8 @@ You can use command-line options to get/set the brightness or contrast.
 | Set brightness of a specified monitor. | /set [Device Instance ID] [Brightness] |
 | Set brightness of all monitors.        | /set all [Brightness]                  |
 
+The device instance ID is an unique identifier given by the OS to each monitor. It must be enclosed in quotes. 
+
 You can switch to contrast by inserting `contrast` after `/get` or `/set` (e.g. `/get contrast all`).
 
 If this app is called with `/get` or `/set`, it will return
@@ -109,9 +111,9 @@ If this app is called with `/get` or `/set`, it will return
 [Device Instance ID] [Monitor name] [Brightness] B
 ```
 
-'B' at the end indicates brightness. In addition, '*' is added in the case of a selected monitor. 
+'B' at the end indicates brightness. In addition, '*' will be added in the case of a selected monitor. 
 
-If this app is call with `/get contrast` or `/set contrast`, it will return
+If this app is called with `/get contrast` or `/set contrast`, it will return
 
 ```
 [Device Instance ID] [Monitor name] [Contrast] C
@@ -119,11 +121,9 @@ If this app is call with `/get contrast` or `/set contrast`, it will return
 
 'C' at the end indicates contrast. If contrast is not supported by a monitor, '-' will be shown instead.
 
-The device instance ID is an unique identifier given by the OS to each monitor. It must be enclosed in quotes. 
-
 The brightness or contrast ranges from 0 to 100%. When you use `/set` option, it can be specified with the number itself (e.g. 20), increase (e.g. +10) or decrease (e.g. -10).
 
-The options can be executed consecutively (e.g. `monitorian /get 20 /get contrast 20`).
+The options can be executed consecutively (e.g. `monitorian /set 20 /set contrast 40`).
 
 You can call this app by its name `Monitorian` in command prompt or bat file. From Task Scheduler, it can be performed by the path to its alias `%LOCALAPPDATA%\Microsoft\WindowsApps\Monitorian.exe`. For example, to increase brightness of all monitors by 30%, the Action will be the following:
 
@@ -180,7 +180,7 @@ In any case, reporting on the controllability of a monitor MUST include probe.lo
 ### Command-line arguments
 
  - As part of testing, you can store persistent arguments in `Command-line arguments` in the hidden menu. They will be tested along with current arguments when this app starts.
- - For example, if you want to fix this app's language to English (default), set `/lang en` in this box.
+ - For example, if you want this app to always use English language (default), set `/lang en` in this box.
 
 ### Exceptions
 
@@ -211,6 +211,12 @@ An alternative language can be shown by adding a Resources (.resx) file into `/S
  - VESA [Monitor Control Command Set (MCCS)](https://www.google.co.jp/search?q=VESA+Monitor+Control+Command+Set+Standard+MCCS) standard
 
 ## History
+
+Ver 4.1 2023-3-13
+
+ - Improve internal code
+ - Supplement Ukrainian (uk-UA) language. Thanks to @kaplun07!
+ - Supplement Russian (ru-RU) language. Thanks to @San4es!
 
 Ver 4.0 2022-12-31
 
