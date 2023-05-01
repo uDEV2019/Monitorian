@@ -23,7 +23,7 @@ Additional languages:
  - Catalan (ca) by @ericmp33
  - German (de) by @uDEV2019
  - Spanish (es) by @josemirm and @ericmp33
- - French (fr) by @AlexZeGamer
+ - French (fr) by @AlexZeGamer and @Rikiiiiiii
  - Italian (it) by @GhostyJade
  - Japanese (ja-JP) by @emoacht
  - Korean (ko-KR) by @VenusGirl
@@ -56,7 +56,7 @@ Additional languages:
    ```
 
  * Other:<br>
-:floppy_disk: [Installer](https://github.com/emoacht/Monitorian/releases/download/4.1.0-Installer/MonitorianInstaller410.zip)
+:floppy_disk: [Installer](https://github.com/emoacht/Monitorian/releases/download/4.3.0-Installer/MonitorianInstaller430.zip)
 
 ## Install/Uninstall
 
@@ -212,6 +212,15 @@ An alternative language can be shown by adding a Resources (.resx) file into `/S
 
 ## History
 
+Ver 4.3 2023-4-21
+
+ - Fix window position on Windows 11 Build 22621
+
+Ver 4.2 2023-3-21
+
+ - Change function to change in unison
+ - Supplement French (fr) language. Thanks to @Rikiiiiiii!
+ 
 Ver 4.1 2023-3-13
 
  - Improve internal code
